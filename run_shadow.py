@@ -10,8 +10,14 @@ try:
     for name in ["ccc", "cube", "box", "king", "cow"]:
         print("=============================================================")
         print(f"Начало работы с полиэдром '{name}'")
+        polyedr = Polyedr(f"data/{name}.geom")
+        print(
+            "Сумма длин проекций полностью невидимых рёбер "
+            "с дополнительными условиями:",
+            polyedr.hidden_edge_projection_sum(),
+        )
         start_time = time()
-        Polyedr(f"data/{name}.geom").draw(tk)
+        polyedr.draw(tk)
         delta_time = time() - start_time
         print(f"Изображение полиэдра '{name}' заняло {delta_time} сек.")
         input("Hit 'Return' to continue -> ")
