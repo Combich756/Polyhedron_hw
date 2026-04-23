@@ -160,10 +160,9 @@ class Polyedr:
                         if key not in unique_edges:
                             unique_edges[key] = Edge(b0, b1)
 
-                    self.facets.append(Facet(vertexes))
-                    self.base_facets.append(Facet(base_vertexes))
-
-        self.unique_base_edges = list(unique_edges.values())
+                        self.facets.append(Facet(vertexes))
+                        self.base_facets.append(Facet(base_vertexes))
+                        self.unique_base_edges = list(unique_edges.values())
 
     @staticmethod
     def _point_key(p):
