@@ -160,7 +160,7 @@ class Polyedr:
 
         unique_edges = {}
 
-        with open(filename, encoding="utf-8") as geom_file:
+        with open(filename) as geom_file:
             lines = [line for line in geom_file if line.split()]
 
         for i, line in enumerate(lines):
