@@ -1,8 +1,11 @@
-import unittest
 import tempfile
-from math import pi, isclose
-from shadow.polyedr import Edge, Polyedr
+import unittest
+from contextlib import redirect_stdout
+from io import StringIO
+from math import isclose, pi
+
 from common.r3 import R3
+from shadow.polyedr import Edge, Facet, Polyedr, Segment
 
 
 class TestCharacteristicHelpers(unittest.TestCase):
@@ -23,6 +26,36 @@ class TestCharacteristicHelpers(unittest.TestCase):
         e = Edge(R3(1.0, 0.0, 0.0), R3(2.4, 1.0, 0.0))
         self.assertTrue(isclose(e.projected_center_distance_to_x2(), 0.3))
 
+    def test_visibility_classes_and_reset_gaps(self):
+        e = Edge(R3(0.0, 0.0, 0.0), R3(1.0, 0.0, 0.0))
+
+        self.assertTrue(e.is_fully_visible())
+        self.assertFalse(e.is_partly_visible())
+        self.assertFalse(e.is_fully_invisible())
+
+        e.gaps = [Segment(0.0, 0.5)]
+        self.assertFalse(e.is_fully_visible())
+        self.assertTrue(e.is_partly_visible())
+        self.assertFalse(e.is_fully_invisible())
+
+        e.gaps = []
+        self.assertFalse(e.is_fully_visible())
+        self.assertFalse(e.is_partly_visible())
+        self.assertTrue(e.is_fully_invisible())
+
+        e.reset_gaps()
+        self.assertTrue(e.is_fully_visible())
+
+    def test_vertical_normal_can_be_reversed(self):
+        f = Facet([
+            R3(0.0, 0.0, 0.0),
+            R3(0.0, 2.0, 0.0),
+            R3(2.0, 2.0, 0.0),
+            R3(2.0, 0.0, 0.0),
+        ])
+
+        self.assertLess(f.v_normals()[0].y, 0.0)
+
 
 class TestCharacteristicIntegration(unittest.TestCase):
 
@@ -31,6 +64,30 @@ class TestCharacteristicIntegration(unittest.TestCase):
         tmp.write(content)
         tmp.close()
         return tmp.name
+
+    def test_print_hidden_edge_projection_sum(self):
+        path = self._write_geom(
+            """1 0 0 0
+8 2 8
+0.5 0.0 1.0
+2.5 0.0 1.0
+2.5 2.0 1.0
+0.5 2.0 1.0
+1.2 0.5 0.0
+2.2 0.5 0.0
+2.2 1.5 0.0
+1.2 1.5 0.0
+4 1 2 3 4
+4 5 6 7 8
+"""
+        )
+        p = Polyedr(path)
+        stream = StringIO()
+
+        with redirect_stdout(stream):
+            p.print_hidden_edge_projection_sum()
+
+        self.assertIn("4.0", stream.getvalue())
 
     def test_hidden_lower_square_gives_sum_4(self):
         # Верхняя горизонтальная грань полностью закрывает нижнюю
@@ -54,7 +111,7 @@ class TestCharacteristicIntegration(unittest.TestCase):
         p = Polyedr(path)
         self.assertTrue(isclose(p.hidden_edge_projection_sum(), 4.0))
 
-    def test_same_polyhedron_with_other_scale_and_angles_gives_same_value(self):
+    def test_scale_angles_do_not_change_value(self):
         geom1 = """1 0 0 0
 8 2 8
 0.5 0.0 1.0
